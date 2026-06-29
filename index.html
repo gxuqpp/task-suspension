@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>课程设计任务书智能评阅系统（离合器）</title>
+<style>
+  :root{
+    --blue:#1a4a8a; --blue-light:#2d6ec0; --bg:#f0f4fb; --card:#fff;
+    --border:#c8d8f0; --ok:#1a7c3a; --err:#c0392b; --warn:#d48806; --header-bg:#1a3560;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:"微软雅黑","Microsoft YaHei",sans-serif;background:var(--bg);color:#222;font-size:14px;}
+
+  /* header */
+  .app-header{background:var(--header-bg);color:#fff;padding:14px 20px;}
+  .app-header h1{font-size:18px;font-weight:700;}
+  .app-header .sub{font-size:12px;opacity:.85;margin-top:4px;line-height:1.6;}
+  .header-row{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+  .student-badge{background:rgba(255,255,255,.15);padding:8px 16px;border-radius:6px;font-size:13px;}
+  .student-badge .label{opacity:.8;font-size:11px;}
+  .student-badge .value{font-size:15px;font-weight:700;margin-top:2px;}
+  .teacher-btn{background:rgba(255,255,255,.2);padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;border:1px solid rgba(255,255,255,.3);transition:all .2s;}
+  .teacher-btn:hover{background:rgba(255,255,255,.3);}
+
+  /* login */
+  .login-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:9999;}
+  .login-box{background:#fff;padding:32px;border-radius:12px;max-width:460px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,.3);}
+  .login-box h2{color:var(--blue);margin-bottom:8px;font-size:22px;}
+  .login-box .desc{color:#666;font-size:13px;margin-bottom:24px;line-height:1.5;}
+  .login-field{margin-bottom:16px;}
+  .login-field label{display:block;margin-bottom:6px;font-weight:600;font-size:13px;color:#555;}
+  .login-field input{width:100%;padding:10px 14px;border:2px solid #ddd;border-radius:6px;font-size:14px;transition:border-color .2s;}
+  .login-field input:focus{outline:none;border-color:var(--blue-light);}
+  .login-field .hint{font-size:12px;color:#888;margin-top:4px;}
+  .login-field .error{font-size:12px;color:var(--err);margin-top:4px;display:none;}
+  .login-btn{width:100%;padding:12px;background:var(--blue-light);color:#fff;border:none;border-radius:6px;font-size:15px;font-weight:700;cursor:pointer;transition:background .2s;}
+  .login-btn:hover{background:var(--blue);}
+  .login-link{text-align:center;margin-top:16px;font-size:13px;}
+  .login-link a{color:var(--blue-light);cursor:pointer;text-decoration:underline;}
+
+  /* layout */
+  .wrap{max-width:980px;margin:0 auto;padding:18px 16px 60px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+  .card-title{font-size:16px;font-weight:700;color:var(--blue);display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+  .card-title .icon{font-size:18px;}
+  .info-box{background:#fffbea;border:1px solid #f0d96a;border-radius:6px;padding:10px 14px;font-size:13px;color:#5a4800;margin:8px 0;line-height:1.7;}
+  .btn{padding:10px 18px;border:none;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;}
+  .btn-primary{background:var(--blue-light);color:#fff;} .btn-primary:hover{background:var(--blue);}
+  .btn-success{background:var(--ok);color:#fff;} .btn-success:hover{background:#145e2c;}
+  .btn-danger{background:var(--err);color:#fff;} .btn-danger:hover{background:#a02a1f;}
+  .btn-ghost{background:#e8eef8;color:var(--blue);} .btn-ghost:hover{background:#d8e4f5;}
+  .btn-bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+
+  /* criteria grid */
+  .crit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:6px;}
+  .crit-item{background:#f0f6ff;border:1px solid #c0d8f0;border-radius:8px;padding:12px 14px;}
+  .crit-item .pct{font-size:24px;font-weight:800;color:#1a5fa8;}
+  .crit-item .lbl{font-size:13px;font-weight:700;color:#333;margin-top:2px;}
+  .crit-item .desc{font-size:11px;color:#777;margin-top:5px;line-height:1.5;}
+
+  /* input toggle */
+  .seg{display:inline-flex;background:#e8eef8;border-radius:8px;padding:4px;margin-bottom:12px;}
+  .seg button{border:none;background:transparent;padding:8px 18px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700;color:#555;}
+  .seg button.active{background:var(--blue-light);color:#fff;}
+  .upload-zone{border:2px dashed #a0c8f0;border-radius:8px;padding:34px 20px;text-align:center;background:#f8faff;cursor:pointer;transition:.3s;}
+  .upload-zone:hover{border-color:#1a5fa8;background:#eef5ff;}
+  textarea.paste{width:100%;min-height:220px;border:2px solid #ddd;border-radius:8px;padding:12px;font-size:13px;font-family:"微软雅黑",monospace;line-height:1.6;resize:vertical;}
+  textarea.paste:focus{outline:none;border-color:var(--blue-light);}
+
+  /* score banner */
+  .score-banner{background:linear-gradient(135deg,#1a3a5c,#1a5fa8);color:#fff;border-radius:10px;padding:24px;margin-bottom:16px;}
+  .score-banner .sub{font-size:14px;opacity:.88;}
+  .score-big{font-size:52px;font-weight:800;margin:8px 0;}
+  .score-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:16px;}
+  .score-di{background:rgba(255,255,255,.15);padding:10px;border-radius:7px;text-align:center;}
+  .score-di .dl{font-size:11px;opacity:.85;}
+  .score-di .dv{font-size:17px;font-weight:800;margin-top:4px;}
+
+  /* result tables */
+  .rtab{width:100%;border-collapse:collapse;font-size:13px;}
+  .rtab th{background:#1a5fa8;color:#fff;padding:8px 10px;text-align:left;font-weight:600;}
+  .rtab td{padding:7px 10px;border-bottom:1px solid #eee;vertical-align:top;}
+  .rtab tr:nth-child(even) td{background:#f8faff;}
+  .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;}
+  .b-ok{background:#d4f0db;color:#1a7c3a;} .b-warn{background:#fff3cd;color:#856404;} .b-err{background:#fde8e7;color:#c0392b;} .b-skip{background:#eee;color:#888;}
+  .evi{font-family:monospace;font-size:12px;color:#1a2a6a;background:#f0f4ff;padding:1px 6px;border-radius:4px;word-break:break-all;}
+  .target-tag{font-size:12px;color:#888;}
+
+  /* teacher panel */
+  .tpanel{background:#fff;padding:28px;border-radius:12px;max-width:1000px;width:95%;max-height:92vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,.3);}
+  .stats-card{background:linear-gradient(135deg,#f093fb,#f5576c);color:#fff;padding:20px;border-radius:10px;margin-bottom:16px;}
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-top:14px;}
+  .stats-item{background:rgba(255,255,255,.2);padding:14px;border-radius:8px;text-align:center;}
+  .stats-item .label{font-size:12px;opacity:.9;} .stats-item .value{font-size:26px;font-weight:700;margin-top:5px;}
+  .student-list{max-height:460px;overflow-y:auto;}
+  .student-item{background:#f8faff;border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:10px;}
+  .student-item .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .student-item .name{font-size:15px;font-weight:700;color:var(--blue);}
+  .tz{border:2px dashed var(--border);border-radius:8px;padding:30px 20px;text-align:center;background:#f8faff;cursor:pointer;}
+  .tz:hover{border-color:var(--blue-light);background:#f0f6ff;}
+
+  /* spinner */
+  .loading{display:flex;flex-direction:column;align-items:center;gap:14px;padding:36px;}
+  .spinner{width:42px;height:42px;border:4px solid #dde;border-top:4px solid #1a5fa8;border-radius:50%;animation:spin .9s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .miss-list{margin:8px 0 0;padding-left:20px;font-size:13px;color:#a02a1f;line-height:1.9;}
+  @media(max-width:680px){.score-big{font-size:42px;}}
+user-select: none
+</style>
+
+<!-- PDF.js（联网时自动加载，用于提取 PDF 文字） -->
+<script>
+(function(){var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';s.onerror=function(){window.__pdfFailed=true;};document.head.appendChild(s);})();
+</script>
+</head>
+<body>
+
+<!-- ====== 学生登录 ====== -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <h2>🎓 身份验证</h2>
+    <div class="desc">欢迎使用「课程设计任务书智能评阅系统（离合器）」。<br>请输入学号与姓名后上传任务书，系统将按评分标准自动评阅并生成报告。</div>
+    <div class="login-field">
+      <label>学号</label>
+      <input type="text" id="studentId" placeholder="请输入学号（如 2024012345）" maxlength="20">
+      <div class="error" id="idError">请输入有效学号（6 位以上数字）</div>
+    </div>
+    <div class="login-field">
+      <label>姓名</label>
+      <input type="text" id="studentName" placeholder="请输入您的姓名">
+      <div class="error" id="nameError">请输入姓名</div>
+    </div>
+    <button class="login-btn" onclick="submitLogin()">进入评阅</button>
+    <div class="login-link"><a onclick="openTeacherLogin()">👨‍🏫 教师管理入口</a></div>
+  </div>
+</div>
+
+<!-- ====== 教师登录 ====== -->
+<div class="login-overlay" id="teacherLoginOverlay" style="display:none">
+  <div class="login-box">
+    <h2>🔐 教师管理系统</h2>
+    <div class="desc">请输入教师密码以访问汇总统计与导出功能。</div>
+    <div class="login-field">
+      <label>教师密码</label>
+      <input type="password" id="teacherPassword" placeholder="请输入密码" onkeydown="if(event.key==='Enter')submitTeacherLogin()">
+      <div class="error" id="pwdError">密码错误</div>
+    </div>
+    <div class="btn-bar">
+      <button class="login-btn" onclick="submitTeacherLogin()">登录</button>
+      <button class="login-btn" style="background:#888" onclick="closeTeacherLogin()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== 顶栏 ====== -->
+<div class="app-header">
+  <div class="header-row">
+    <div>
+      <h1>📋 课程设计任务书智能评阅系统（离合器）</h1>
+      <div class="sub">广西大学 · 车辆工程专业 · 《汽车设计》课程教学团队</div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <div class="teacher-btn" onclick="openTeacherLogin()">👨‍🏫 教师管理</div>
+      <div class="student-badge" id="studentBadge" style="display:none">
+        <div class="label">当前学生</div>
+        <div class="value"><span id="displayName"></span> (<span id="displayId"></span>)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- 评分标准 -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📝</span>任务书评阅 · 评分标准（共 100 分）</div>
+    <div class="info-box">
+      <strong>使用说明：</strong>上传任务书 PDF，系统将自动定位封面、设计参数、起始日期、参考文献等内容，按下列标准评分并给出明细与改进建议。
+    </div>
+    <div class="crit-grid">
+      <div class="crit-item"><div class="pct">10</div><div class="lbl">封面信息</div><div class="desc">学号、姓名、指导教师（覃频频/杨蓉/黄俊明/项载毓）是否正确</div></div>
+      <div class="crit-item"><div class="pct">10</div><div class="lbl">封面时间</div><div class="desc">封面落款时间是否为 2026 年 7 月 6 日</div></div>
+      <div class="crit-item"><div class="pct">50</div><div class="lbl">设计参数/数据</div><div class="desc">基本数据是否齐全、能否支撑后续离合器设计计算（发动机转矩、转速、传动比、质量等）</div></div>
+      <div class="crit-item"><div class="pct">10</div><div class="lbl">设计工作起止日期</div><div class="desc">起止时间是否为「自 2026 年 7 月 6 日起，至 2026 年 7 月 17 日止」</div></div>
+      <div class="crit-item"><div class="pct">20</div><div class="lbl">主要参考文献</div><div class="desc">「主要参考文献与书籍」≥ 20 篇，且含 ≥ 2 篇英文文献为满分</div></div>
+    </div>
+  </div>
+
+  <!-- 上传/粘贴 -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📂</span>提交任务书</div>
+
+    <div id="pdfInput">
+      <input type="file" id="revFile" accept=".pdf" style="display:none" onchange="onRevFileSelected(event)">
+      <div class="upload-zone" id="revUploadZone" onclick="document.getElementById('revFile').click()">
+        <div style="font-size:42px;margin-bottom:8px">📄</div>
+        <div style="font-size:15px;font-weight:700;color:#1a5fa8">点击选择 PDF 文件</div>
+        <div style="font-size:12px;color:#888;margin-top:6px">仅支持含可选中文字的 PDF（纯扫描图片暂无法识别）</div>
+      </div>
+      <div style="margin-top:10px;font-size:13px;color:#555">已选文件：<b id="revFileName">未选择</b></div>
+    </div>
+
+    <div class="btn-bar">
+      <button class="btn btn-primary" onclick="gradeTaskBook()">🔍 开始评阅</button>
+    </div>
+  </div>
+
+  <div id="gradeResult"></div>
+
+  <div id="downloadArea" style="display:none">
+    <div class="btn-bar">
+      <button class="btn btn-success" onclick="generateReportFile()">📥 下载任务书评阅报告（TXT）</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   配置项
+   ============================================================ */
+const TEACHER_PASSWORD = 'gxuqpp123';          // 教师密码（如需修改请改这里）
+const ADVISORS = ['覃频频','杨蓉','黄俊明','项载毓'];  // 合法指导教师名单
+const TARGET = {y:2026, mo:7, d:6};            // 封面日期 & 设计工作起始日期：2026年7月6日
+const TARGET_END = {y:2026, mo:7, d:17};       // 设计工作截止日期：2026年7月17日
+const REF_FULL = 20;                            // 参考文献满分所需篇数
+const REF_MIN_EN = 2;                           // 参考文献满分所需的最少英文文献篇数
+const REF_CAP_NO_EN = 16;                       // 英文文献不足时本项最高得分（满分20，扣4分）
+
+let teacherData = [];
+let state = { studentId:'', studentName:'', isTeacher:false };
+let _lastGrade = null;
+
+/* ============================================================
+   登录
+   ============================================================ */
+function submitLogin(){
+  const id=document.getElementById('studentId').value.trim();
+  const name=document.getElementById('studentName').value.trim();
+  let ok=true;
+  if(!/^\d{6,}$/.test(id)){document.getElementById('idError').style.display='block';ok=false;}
+  else document.getElementById('idError').style.display='none';
+  if(name.length<2){document.getElementById('nameError').style.display='block';ok=false;}
+  else document.getElementById('nameError').style.display='none';
+  if(!ok)return;
+  state.studentId=id; state.studentName=name;
+  document.getElementById('displayName').textContent=name;
+  document.getElementById('displayId').textContent=id;
+  document.getElementById('studentBadge').style.display='block';
+  document.getElementById('loginOverlay').style.display='none';
+}
+function openTeacherLogin(){document.getElementById('teacherLoginOverlay').style.display='flex';document.getElementById('teacherPassword').value='';document.getElementById('pwdError').style.display='none';}
+function closeTeacherLogin(){document.getElementById('teacherLoginOverlay').style.display='none';}
+function submitTeacherLogin(){
+  if(document.getElementById('teacherPassword').value===TEACHER_PASSWORD){
+    state.isTeacher=true;
+    document.getElementById('teacherLoginOverlay').style.display='none';
+    document.getElementById('loginOverlay').style.display='none';
+    showTeacherPanel();
+  }else document.getElementById('pwdError').style.display='block';
+}
+
+/* ============================================================
+   选择 PDF 文件
+   ============================================================ */
+function onRevFileSelected(e){
+  const f=e.target.files[0];
+  document.getElementById('revFileName').textContent=f?f.name:'未选择';
+  if(f){const z=document.getElementById('revUploadZone');z.style.borderColor='#1a7c3a';z.style.background='#f0fff4';}
+}
+
+/* ============================================================
+   中文数字 → 阿拉伯数字（仅用于日期识别）
+   ============================================================ */
+function cnToArabic(str){
+  const single={'〇':'0','零':'0','○':'0','Ｏ':'0','ｏ':'0','０':'0','O':'0','o':'0','О':'0','о':'0','Ο':'0','ο':'0',
+    '一':'1','壹':'1','１':'1','二':'2','贰':'2','两':'2','２':'2',
+    '三':'3','叁':'3','３':'3','四':'4','肆':'4','４':'4','五':'5','伍':'5','５':'5',
+    '六':'6','陆':'6','６':'6','七':'7','柒':'7','７':'7','八':'8','捌':'8','８':'8',
+    '九':'9','玖':'9','９':'9'};
+  let out='';
+  for(let i=0;i<str.length;i++){out+=(single[str[i]]!==undefined)?single[str[i]]:str[i];}
+  // 处理「十」：十六→16，二十→20，二十六→26，十→10
+  out=out.replace(/([0-9]?)十([0-9]?)/g,function(_,a,b){
+    const t=a===''?1:parseInt(a,10);
+    const o=b===''?0:parseInt(b,10);
+    return String(t*10+o);
+  });
+  return out;
+}
+
+/* ============================================================
+   日期识别
+   ============================================================ */
+// 日期专用归一化：中文数字→阿拉伯，并去掉所有空白。
+// 解决两类常见的 PDF 提取问题：
+//   1) 落款用中文数字且字间带空格，如「二 O 二六年七月六日」→「2026年7月6日」
+//   2) 数字与「年/月/日」因字体基线不同被 pdf.js 拆到不同行（含换行）
+function normForDate(seg){return cnToArabic(seg).replace(/\s+/g,'');}
+function isTargetDate(seg){
+  const n=normForDate(seg);
+  const r1=new RegExp(TARGET.y+'年0*'+TARGET.mo+'月0*'+TARGET.d+'日?');
+  const r2=new RegExp(TARGET.y+'[\\.\\-\\/]0*'+TARGET.mo+'[\\.\\-\\/]0*'+TARGET.d);
+  return r1.test(n)||r2.test(n);
+}
+function findAnyTargetYearDate(seg){
+  const n=normForDate(seg);
+  let m=n.match(new RegExp(TARGET.y+'年(\\d{1,2})月(\\d{1,2})日?'));
+  if(m)return {y:TARGET.y,mo:+m[1],d:+m[2]};
+  m=n.match(new RegExp(TARGET.y+'[\\.\\-\\/](\\d{1,2})[\\.\\-\\/](\\d{1,2})'));
+  if(m)return {y:TARGET.y,mo:+m[1],d:+m[2]};
+  // 任意日期（年份不对）
+  m=n.match(/(\d{4})年(\d{1,2})月(\d{1,2})/)||n.match(/(\d{4})[\.\-\/](\d{1,2})[\.\-\/](\d{1,2})/);
+  if(m)return {y:+m[1],mo:+m[2],d:+m[3]};
+  return null;
+}
+function fmtDate(d){return d?(d.y+'年'+d.mo+'月'+d.d+'日'):'未识别到日期';}
+// 提取片段内所有日期（按出现顺序），支持中文数字/阿拉伯、含内部空格/换行
+function findAllDates(seg){
+  const n=normForDate(seg);
+  const out=[];
+  let m;
+  const re1=/(\d{4})年0*(\d{1,2})月0*(\d{1,2})日?/g;
+  while((m=re1.exec(n))!==null){out.push({y:+m[1],mo:+m[2],d:+m[3],pos:m.index});}
+  const re2=/(\d{4})[\.\-\/]0*(\d{1,2})[\.\-\/]0*(\d{1,2})/g;
+  while((m=re2.exec(n))!==null){out.push({y:+m[1],mo:+m[2],d:+m[3],pos:m.index});}
+  out.sort(function(a,b){return a.pos-b.pos;});
+  return out;
+}
+function sameDate(a,b){return !!(a&&b&&a.y===b.y&&a.mo===b.mo&&a.d===b.d);}
+
+/* ============================================================
+   分区定位
+   ============================================================ */
+function getCoverRegion(text){
+  // 封面落款日期通常位于封面底部（指导教师/落款一带），排在「设计题目/设计的参数」等
+  // 标记的下方。若用这些标记作下界会把落款日期切掉，故改用“进入正文/正式章节”的标记；
+  // 再把“指导教师/日期/教研室”等落款锚点附近文字并入，确保落款日期一定被纳入。
+  const bodyMarkers=['摘要','目录','正文','设计说明书','设计计算说明书','第一章','第1章','第 1 章','引言','绪论','Abstract'];
+  let cut=text.length;
+  bodyMarkers.forEach(function(mk){const i=text.indexOf(mk);if(i>0&&i<cut)cut=i;});
+  let region=text.slice(0,Math.min(cut,1500));
+  const anchors=['指导教师','指导老师','教研室','系主任','负责人','填表日期','填表时间','批准','审定','落款','日期'];
+  anchors.forEach(function(a){let i=text.indexOf(a);while(i>=0){region+='\n'+text.slice(i,i+80);i=text.indexOf(a,i+1);}});
+  return region;
+}
+function getStartDateRegion(text){
+  const labels=['设计工作起始日期','设计工作起止日期','工作起止日期','设计工作日期','工作起始日期','起止日期','起始日期','设计时间','工作时间','开始日期','起始时间','开始时间','设计起始','设计开始','设计周期'];
+  for(let i=0;i<labels.length;i++){
+    const idx=text.indexOf(labels[i]);
+    if(idx>=0)return {region:text.slice(idx,idx+140),label:labels[i],found:true};
+  }
+  return {region:'',label:'',found:false};
+}
+function getParamSection(text){
+  const starts=['设计的参数或数据','设计参数或数据','设计的参数','设计参数','原始数据','基本参数','设计数据','技术参数','已知参数','已知条件','基本数据','整车参数','车辆参数','主要参数','设计依据'];
+  let s=-1,lbl='';
+  for(let i=0;i<starts.length;i++){const idx=text.indexOf(starts[i]);if(idx>=0){s=idx;lbl=starts[i];break;}}
+  if(s<0)return {text:text,scoped:false,label:''};
+  const from=s+lbl.length;
+  const ends=['设计工作起始日期','工作起始日期','起始日期','设计工作完成','完成日期','设计工作量','工作进度','进度安排','主要参考文献','参考文献','指导教师','教研室','审核','审批意见'];
+  let e=text.length;
+  ends.forEach(function(mk){const ei=text.indexOf(mk,from);if(ei>=0&&ei<e)e=ei;});
+  return {text:text.slice(from,e),scoped:true,label:lbl};
+}
+function getRefSection(text){
+  const labels=['主要参考文献与书籍','主要参考文献','参考文献与书籍','参考文献','参考书目','参考资料'];
+  for(let i=0;i<labels.length;i++){
+    const idx=text.indexOf(labels[i]);
+    if(idx>=0)return {text:text.slice(idx+labels[i].length),found:true,label:labels[i]};
+  }
+  return {text:'',found:false,label:''};
+}
+
+/* ============================================================
+   设计参数清单（离合器设计所需基本数据，合计 50 分）
+   依据《汽车膜片弹簧离合器设计计算工具》整车基本参数输入项：
+   发动机最大转矩 Temax、对应转速 nT、最高转速 nemax、整车/总质量 ma、
+   一挡传动比 i₁、主减速器传动比 i₀、车轮滚动半径 r、最高车速 umax、起步转速 ne 等。
+   ============================================================ */
+const DESIGN_PARAMS=[
+  {name:'发动机最大转矩 Temax', kws:['发动机最大转矩','最大转矩','最大扭矩','Temax'], pts:9, needNum:true},
+  {name:'最大转矩对应转速 nT', kws:['最大转矩对应转速','转矩对应转速','对应转速','转矩转速'], pts:4, needNum:true},
+  {name:'发动机最高转速 nemax', kws:['发动机最高转速','最高转速','额定转速','nemax'], pts:5, needNum:true},
+  {name:'发动机最大功率 / 额定功率', kws:['发动机最大功率','最大功率','额定功率','Pemax','Pmax'], pts:3, needNum:true},
+  {name:'整车 / 满载质量 ma', kws:['整车质量','最大总质量','满载质量','整备质量','车辆质量','总质量','装载质量','满载'], pts:6, needNum:true},
+  {name:'变速器一挡传动比 i₁', kws:['一挡传动比','一档传动比','变速器一挡','变速器一档','一挡速比','一档速比','一挡'], pts:5, needNum:true},
+  {name:'主减速器传动比 i₀', kws:['主减速器传动比','主减速比','主传动比','主减速器','主减'], pts:5, needNum:true},
+  {name:'车轮滚动半径 / 轮胎规格', kws:['车轮滚动半径','车轮半径','滚动半径','有效半径','轮胎规格','轮胎型号','车轮滚动','轮胎','轮辋'], pts:5, needNum:false},
+  {name:'最高车速 umax', kws:['最高车速','最大车速','最高速度','最大速度','最高时速'], pts:4, needNum:true},
+  {name:'发动机起步转速 ne', kws:['起步转速','离合器接合转速','接合转速','起步车速','换挡车速','起步'], pts:4, needNum:true}
+];
+function findParam(text,p){
+  let bestNoNum=null;
+  for(let i=0;i<p.kws.length;i++){
+    const kw=p.kws[i];
+    let idx=text.indexOf(kw);
+    while(idx>=0){
+      const after=text.slice(idx,idx+42);
+      const num=after.match(/\d+(?:\.\d+)?/);
+      const snip=after.replace(/\s+/g,' ').trim();
+      if(num)return {found:true,hasNum:true,evidence:snip};
+      if(!bestNoNum)bestNoNum={found:true,hasNum:false,evidence:snip};
+      idx=text.indexOf(kw,idx+1);
+    }
+  }
+  return bestNoNum||{found:false,hasNum:false,evidence:'未找到'};
+}
+
+/* ============================================================
+   参考文献计数
+   ============================================================ */
+function countReferences(refText){
+  if(!refText)return 0;
+  const seg=refText.slice(0,9000);
+  const bracket=(seg.match(/[\[【〔（(]\s*\d{1,3}\s*[\]】〕）)]/g)||[]).length;
+  const lineLead=(seg.match(/(^|\n)\s*\d{1,3}\s*[\.\、]/g)||[]).length;
+  return Math.max(bracket,lineLead);
+}
+// 将文献区段按条目编号拆分为若干条（兼容 [n] 与 行首 n. / n、 两种体例）
+function splitRefEntries(refText){
+  const seg=(refText||'').slice(0,9000);
+  let a=seg.split(/[\[【〔（(]\s*\d{1,3}\s*[\]】〕）)]/).map(function(s){return s.trim();}).filter(Boolean);
+  let b=seg.split(/(?:^|\n)\s*\d{1,3}\s*[\.\、]/).map(function(s){return s.trim();}).filter(Boolean);
+  return a.length>=b.length?a:b;
+}
+// 判断单条文献是否为英文文献：几乎不含中文（≤2个汉字，容忍杂散），且含足量拉丁字母与英文单词
+function isEnglishRef(entry){
+  const cjk=(entry.match(/[\u4e00-\u9fa5]/g)||[]).length;
+  const latin=(entry.match(/[A-Za-z]/g)||[]).length;
+  const words=(entry.match(/[A-Za-z]{2,}/g)||[]).length;
+  return cjk<=2 && latin>=10 && words>=3;
+}
+// 统计英文文献篇数
+function countEnglishReferences(refText){
+  if(!refText)return 0;
+  return splitRefEntries(refText).filter(isEnglishRef).length;
+}
+
+/* ============================================================
+   主评分函数
+   ============================================================ */
+function scoreTaskBook(raw){
+  const text=raw.replace(/\u00a0/g,' ');
+  const noSpace=text.replace(/\s/g,'');
+  const R={};
+
+  /* ① 封面信息（10）：学号4 + 姓名3 + 指导教师3 */
+  const idFound = state.studentId && noSpace.indexOf(state.studentId)>=0;
+  const nameFound = state.studentName && noSpace.indexOf(state.studentName)>=0;
+  const matchedAdvisors = ADVISORS.filter(function(a){return noSpace.indexOf(a)>=0;});
+  const advisorFound = matchedAdvisors.length>0;
+  const coverSub=[
+    {name:'学号',target:state.studentId||'(未登录)',found:idFound,score:idFound?4:0,max:4},
+    {name:'姓名',target:state.studentName||'(未登录)',found:nameFound,score:nameFound?3:0,max:3},
+    {name:'指导教师',target:ADVISORS.join(' / '),found:advisorFound,score:advisorFound?3:0,max:3,note:advisorFound?('识别到：'+matchedAdvisors.join('、')):'未识别到名单内教师'}
+  ];
+  R.cover={score:coverSub.reduce(function(s,x){return s+x.score;},0),max:10,sub:coverSub};
+
+  /* ② 封面时间（10）：2026年7月6日 */
+  const coverRegion=getCoverRegion(text);
+  const coverDateOk=isTargetDate(coverRegion);
+  const coverDateFound=findAnyTargetYearDate(coverRegion);
+  let cdScore=0,cdStatus='err';
+  if(coverDateOk){cdScore=10;cdStatus='ok';}
+  else if(coverDateFound&&coverDateFound.y===TARGET.y){cdScore=4;cdStatus='warn';}
+  else cdScore=0;
+  R.coverDate={score:cdScore,max:10,status:cdStatus,found:fmtDate(coverDateFound),target:fmtDate(TARGET)};
+
+  /* ③ 设计参数/数据（50） */
+  const ps=getParamSection(text);
+  const pDetails=DESIGN_PARAMS.map(function(p){
+    const f=findParam(ps.text,p);
+    let sc=0,status='err';
+    if(f.found&&(f.hasNum||!p.needNum)){sc=p.pts;status='ok';}
+    else if(f.found&&p.needNum&&!f.hasNum){sc=Math.round(p.pts*0.5);status='warn';}
+    else {sc=0;status='err';}
+    return {name:p.name,evidence:f.evidence,score:sc,max:p.pts,status:status,needNum:p.needNum,hasNum:f.hasNum,found:f.found};
+  });
+  R.params={score:pDetails.reduce(function(s,x){return s+x.score;},0),max:50,scoped:ps.scoped,label:ps.label,details:pDetails};
+
+  /* ④ 设计工作起止日期（10）：自2026年7月6日起，至2026年7月17日止 */
+  const sd=getStartDateRegion(text);
+  let sdScore=0,sdStatus='err',sdStart=null,sdEnd=null,sdHasStart=false,sdHasEnd=false;
+  if(sd.found){
+    const dates=findAllDates(sd.region);
+    sdHasStart=dates.some(function(x){return sameDate(x,TARGET);});
+    sdHasEnd=dates.some(function(x){return sameDate(x,TARGET_END);});
+    if(dates.length>=2){sdStart=dates[0];sdEnd=dates[dates.length-1];}
+    else if(dates.length===1){sdStart=dates[0];}
+    if(sdHasStart&&sdHasEnd){sdScore=10;sdStatus='ok';}
+    else if(sdHasStart||sdHasEnd){sdScore=5;sdStatus='warn';}
+    else if(dates.some(function(x){return x.y===TARGET.y;})){sdScore=3;sdStatus='warn';}
+    else {sdScore=0;sdStatus='err';}
+  }else{
+    sdStatus='miss';
+  }
+  R.startDate={score:sdScore,max:10,status:sdStatus,labelFound:sd.found,label:sd.label,
+    start:sdStart,end:sdEnd,hasStart:sdHasStart,hasEnd:sdHasEnd,
+    foundStart:sdStart?fmtDate(sdStart):(sd.found?'未识别到日期':'字段缺失'),
+    foundEnd:sdEnd?fmtDate(sdEnd):(sd.found?'未识别到日期':'字段缺失'),
+    targetStart:fmtDate(TARGET),targetEnd:fmtDate(TARGET_END)};
+
+  /* ⑤ 主要参考文献（20）：≥20篇 且 ≥2篇英文 方得满分 */
+  const rs=getRefSection(text);
+  const refCount=countReferences(rs.text);
+  const enCount=countEnglishReferences(rs.text);
+  const enOK=enCount>=REF_MIN_EN;
+  let refScore=Math.min(REF_FULL,refCount);
+  if(!enOK)refScore=Math.min(refScore,REF_CAP_NO_EN);   // 英文文献不足：无法得满分
+  const refFull=(refCount>=REF_FULL && enOK);
+  R.refs={score:refScore,max:20,count:refCount,enCount:enCount,enOK:enOK,
+    found:rs.found,label:rs.label,status:refFull?'ok':(refScore>0?'warn':'err')};
+
+  R.advisor=matchedAdvisors[0]||'';
+  R.refCount=refCount;
+  R.refEnCount=enCount;
+  R.total=R.cover.score+R.coverDate.score+R.params.score+R.startDate.score+R.refs.score;
+  return R;
+}
+
+/* ============================================================
+   PDF 文字提取
+   ============================================================ */
+async function extractPdfText(arrayBuffer){
+  const pdfjsLib=window['pdfjs-dist/build/pdf'];
+  if(!pdfjsLib)throw new Error('PDF 解析库未加载（可能处于离线状态）。请联网后刷新页面重试。');
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const doc=await pdfjsLib.getDocument({data:arrayBuffer}).promise;
+  let full='';
+  for(let i=1;i<=doc.numPages;i++){
+    const page=await doc.getPage(i);
+    const content=await page.getTextContent();
+    const lineMap={};
+    content.items.forEach(function(item){
+      if(!item.str)return;
+      const y=Math.round(item.transform[5]);
+      if(!lineMap[y])lineMap[y]=[];
+      lineMap[y].push({x:item.transform[4],str:item.str});
+    });
+    const lines=Object.keys(lineMap).sort(function(a,b){return b-a;}).map(function(y){
+      return lineMap[y].sort(function(a,b){return a.x-b.x;}).map(function(t){return t.str;}).join('');
+    });
+    full+=lines.join('\n')+'\n';
+  }
+  return full.replace(/\n{3,}/g,'\n\n').trim();
+}
+
+/* ============================================================
+   评阅主流程
+   ============================================================ */
+async function gradeTaskBook(){
+  const res=document.getElementById('gradeResult');
+  let text='';
+  try{
+    const fi=document.getElementById('revFile');
+    if(!fi.files||!fi.files[0]){alert('请先选择任务书 PDF 文件。');return;}
+    res.innerHTML='<div class="card"><div class="loading"><div class="spinner"></div><div style="font-size:14px;color:#1a5fa8;font-weight:700">正在提取 PDF 文字，请稍候…</div></div></div>';
+    const ab=await fi.files[0].arrayBuffer();
+    text=await extractPdfText(ab);
+    if(text.length<50)throw new Error('未能提取到文字。请确认 PDF 含可选中文字（非纯扫描图片）。');
+    const r=scoreTaskBook(text);
+    _lastGrade=r;
+    renderGrade(r,text);
+  }catch(err){
+    res.innerHTML='<div class="card"><div style="background:#fde8e7;border:1px solid #c0392b;border-radius:7px;padding:14px;color:#c0392b"><b>❌ 评阅失败：</b>'+err.message+'</div></div>';
+  }
+}
+
+/* ============================================================
+   渲染评阅结果
+   ============================================================ */
+const STBADGE={ok:'<span class="badge b-ok">✓ 通过</span>',warn:'<span class="badge b-warn">△ 部分</span>',err:'<span class="badge b-err">✗ 不符</span>',miss:'<span class="badge b-skip">— 缺失</span>'};
+function gradeText(t){return t>=90?'优秀':t>=80?'良好':t>=70?'中等':t>=60?'及格':'不及格';}
+
+function renderGrade(r,text){
+  const grade=gradeText(r.total);
+
+  // 封面信息明细
+  const coverRows=r.cover.sub.map(function(s){
+    const st=s.found?'ok':'err';
+    return '<tr><td><b>'+s.name+'</b></td><td><span class="target-tag">应含：</span><span class="evi">'+s.target+'</span>'+(s.note?'<br><span class="target-tag">'+s.note+'</span>':'')+'</td><td>'+STBADGE[st]+'</td><td style="text-align:center"><span class="badge b-'+(s.score===s.max?'ok':'err')+'">'+s.score+'/'+s.max+'</span></td></tr>';
+  }).join('');
+
+  // 设计参数明细
+  const paramRows=r.params.details.map(function(d){
+    const sc=d.score===d.max?'ok':d.score>0?'warn':'err';
+    return '<tr><td>'+d.name+'</td><td>'+(d.found?'<span class="evi">'+escapeHtml(d.evidence)+'</span>':'<span class="target-tag">未在参数部分找到</span>')+'</td><td>'+STBADGE[d.status]+'</td><td style="text-align:center"><span class="badge b-'+sc+'">'+d.score+'/'+d.max+'</span></td></tr>';
+  }).join('');
+  const missing=r.params.details.filter(function(d){return d.score<d.max;}).map(function(d){return d.name+(d.found&&!d.hasNum?'（已提及但缺少具体数值）':'（缺失）');});
+
+  document.getElementById('gradeResult').innerHTML=`
+  <div class="score-banner">
+    <div class="sub">课程设计任务书评阅总分</div>
+    <div class="score-big">${r.total}</div>
+    <div style="font-size:20px;font-weight:700">${grade}</div>
+    <div class="sub" style="margin-top:4px">${state.studentName||'—'} · ${state.studentId||'—'}</div>
+    <div class="score-grid">
+      <div class="score-di"><div class="dl">封面信息</div><div class="dv">${r.cover.score}/10</div></div>
+      <div class="score-di"><div class="dl">封面时间</div><div class="dv">${r.coverDate.score}/10</div></div>
+      <div class="score-di"><div class="dl">设计参数</div><div class="dv">${r.params.score}/50</div></div>
+      <div class="score-di"><div class="dl">起止日期</div><div class="dv">${r.startDate.score}/10</div></div>
+      <div class="score-di"><div class="dl">参考文献</div><div class="dv">${r.refs.score}/20</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🪪</span>① 封面信息（${r.cover.score}/10）</div>
+    <table class="rtab"><thead><tr><th>检查项</th><th>核对依据</th><th>结果</th><th>得分</th></tr></thead><tbody>${coverRows}</tbody></table>
+    <div class="target-tag" style="margin-top:8px">说明：学号、姓名以登录信息为准核对；指导教师须为名单内（${ADVISORS.join('、')}）。</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">📅</span>② 封面时间（${r.coverDate.score}/10）</div>
+    <table class="rtab"><thead><tr><th>项目</th><th>正确时间</th><th>识别结果</th><th>结果</th><th>得分</th></tr></thead>
+    <tbody><tr><td>封面落款日期</td><td><span class="evi">${r.coverDate.target}</span></td><td><span class="evi">${r.coverDate.found}</span></td><td>${STBADGE[r.coverDate.status]}</td><td style="text-align:center"><span class="badge b-${r.coverDate.score===10?'ok':r.coverDate.score>0?'warn':'err'}">${r.coverDate.score}/10</span></td></tr></tbody></table>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">📐</span>③ 设计参数 / 数据（${r.params.score}/50）</div>
+    <div class="info-box" style="margin-top:0">检查「设计的参数或数据」部分是否给出支撑后续离合器设计计算的基本数据（发动机转矩与转速、传动比、整车质量、车轮半径等）。${r.params.scoped?('已定位到参数区段（依据“'+r.params.label+'”）。'):'<b style="color:#c0392b">未定位到独立参数区段，已在全文范围内检索（结果可能偏宽松，请人工复核）。</b>'}</div>
+    <table class="rtab"><thead><tr><th>必备数据项</th><th>识别到的内容</th><th>结果</th><th>得分</th></tr></thead><tbody>${paramRows}</tbody></table>
+    ${missing.length?('<div style="margin-top:10px;font-weight:700;color:#a02a1f">⚠ 缺失/不足的数据项：</div><ul class="miss-list">'+missing.map(function(m){return '<li>'+m+'</li>';}).join('')+'</ul>'):'<div style="margin-top:10px;color:#1a7c3a;font-weight:700">✓ 基本数据齐全，可支撑后续离合器设计计算。</div>'}
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🗓️</span>④ 设计工作起止日期（${r.startDate.score}/10）</div>
+    <table class="rtab"><thead><tr><th>项目</th><th>正确时间</th><th>识别结果</th><th>结果</th></tr></thead>
+    <tbody>
+      <tr><td>起始日期</td><td><span class="evi">${r.startDate.targetStart}</span></td><td><span class="evi">${r.startDate.foundStart}</span></td><td>${r.startDate.hasStart?STBADGE.ok:(r.startDate.labelFound?STBADGE.err:STBADGE.miss)}</td></tr>
+      <tr><td>截止日期</td><td><span class="evi">${r.startDate.targetEnd}</span></td><td><span class="evi">${r.startDate.foundEnd}</span></td><td>${r.startDate.hasEnd?STBADGE.ok:(r.startDate.labelFound?STBADGE.err:STBADGE.miss)}</td></tr>
+    </tbody></table>
+    <div class="target-tag" style="margin-top:8px">计分规则：起止日期均正确得满分（10）；仅一项正确得 5 分；${r.startDate.labelFound?('已定位到“'+escapeHtml(r.startDate.label)+'”字段。'):'<b style="color:#c0392b">未定位到“设计工作起止日期”字段，请确认任务书是否包含该部分。</b>'}<b style="color:#1a5fa8;margin-left:6px">本项合计 ${r.startDate.score}/10</b></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">📚</span>⑤ 主要参考文献与书籍（${r.refs.score}/20）</div>
+    <table class="rtab"><thead><tr><th>检查项</th><th>要求</th><th>识别结果</th><th>结果</th></tr></thead>
+    <tbody>
+      <tr><td>参考文献篇数</td><td><span class="evi">≥ ${REF_FULL} 篇</span></td><td><b style="font-size:16px;color:#1a5fa8">${r.refs.count}</b> 篇</td><td>${r.refs.found?(r.refs.count>=REF_FULL?STBADGE.ok:STBADGE.warn):'<span class="badge b-skip">— 未找到文献区段</span>'}</td></tr>
+      <tr><td>其中英文文献</td><td><span class="evi">≥ ${REF_MIN_EN} 篇</span></td><td><b style="font-size:16px;color:${r.refs.enOK?'#1a7c3a':'#c0392b'}">${r.refs.enCount}</b> 篇</td><td>${r.refs.found?(r.refs.enOK?STBADGE.ok:STBADGE.err):'<span class="badge b-skip">—</span>'}</td></tr>
+    </tbody></table>
+    <div class="target-tag" style="margin-top:8px">计分规则：篇数每篇计 1 分、满 ${REF_FULL} 篇封顶；<b style="color:#c0392b">满分还须含 ≥ ${REF_MIN_EN} 篇英文文献</b>，英文不足时本项最高 ${REF_CAP_NO_EN} 分。${r.refs.found?('文献区段依据“'+r.refs.label+'”定位。'):'未检测到“参考文献”相关标题，请确认任务书是否包含该部分。'}<b style="color:#1a5fa8;margin-left:6px">本项合计 ${r.refs.score}/20</b></div>
+  </div>`;
+  document.getElementById('downloadArea').style.display='block';
+}
+
+function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ============================================================
+   生成 TXT 报告（含机器可读数据，供教师汇总）
+   ============================================================ */
+function generateReportFile(){
+  const r=_lastGrade;if(!r){alert('请先完成评阅！');return;}
+  const grade=gradeText(r.total);
+  const today=new Date().toISOString().slice(0,10);
+  let rep='===============================================\n   课程设计任务书 评阅报告（离合器）\n   广西大学 · 车辆工程专业 ·《汽车设计》课程\n===============================================\n\n';
+  rep+='学号：'+state.studentId+'\n姓名：'+state.studentName+'\n提交时间：'+new Date().toLocaleString('zh-CN')+'\n\n';
+  rep+='总分：'+r.total+' / 100  （'+grade+'）\n';
+  rep+='① 封面信息：'+r.cover.score+' / 10\n';
+  rep+='② 封面时间：'+r.coverDate.score+' / 10  （识别：'+r.coverDate.found+'）\n';
+  rep+='③ 设计参数：'+r.params.score+' / 50\n';
+  rep+='④ 起止日期：'+r.startDate.score+' / 10  （起始：'+r.startDate.foundStart+'；截止：'+r.startDate.foundEnd+'）\n';
+  rep+='⑤ 参考文献：'+r.refs.score+' / 20  （共 '+r.refs.count+' 篇，其中英文 '+r.refs.enCount+' 篇）\n\n';
+
+  rep+='【封面信息明细】\n';
+  r.cover.sub.forEach(function(s){rep+='  '+s.name+'：'+(s.found?'符合':'不符合')+'  得分 '+s.score+'/'+s.max+(s.note?'  ['+s.note+']':'')+'\n';});
+  rep+='\n【设计参数明细】'+(r.params.scoped?'':'（注：未定位到独立参数区段，全文检索）')+'\n';
+  r.params.details.forEach(function(d){rep+='  '+d.name+'：'+(d.status==='ok'?'齐全':d.status==='warn'?'缺数值':'缺失')+'  得分 '+d.score+'/'+d.max+'\n';});
+  rep+='\n【指导教师识别】'+(r.advisor||'未识别')+'\n';
+
+  rep+='\n--- SYSTEM DATA BEGIN ---\n';
+  const jsonData={
+    studentId:state.studentId, studentName:state.studentName,
+    timestamp:new Date().toISOString(), reportType:'taskbook_review',
+    totalScore:r.total, grade:grade,
+    scores:{coverInfo:r.cover.score, coverDate:r.coverDate.score, params:r.params.score, startDate:r.startDate.score, references:r.refs.score},
+    advisor:r.advisor, refCount:r.refCount, refEnCount:r.refEnCount
+  };
+  rep+=JSON.stringify(jsonData,null,2)+'\n--- SYSTEM DATA END ---\n';
+
+  const blob=new Blob([rep],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=state.studentId+'_'+state.studentName+'_离合器任务书评阅报告_'+today+'.txt';
+  a.click();
+  alert('任务书评阅报告已生成！请将此 TXT 文件提交给教师。');
+}
+
+/* ============================================================
+   教师管理面板
+   ============================================================ */
+function showTeacherPanel(){
+  const overlay=document.createElement('div');
+  overlay.className='login-overlay';overlay.id='teacherPanel';overlay.style.display='flex';
+  const panel=document.createElement('div');panel.className='tpanel';
+  panel.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><h2 style="color:var(--blue)">📊 教师汇总管理系统（离线版）</h2><button class="btn btn-danger" onclick="closeTeacherPanel()">关闭</button></div>
+  <div class="card"><div class="card-title"><span class="icon">📁</span>导入学生任务书评阅报告</div>
+  <div class="info-box" style="margin-top:0">收集学生提交的 TXT 报告，拖拽或点击导入后自动解析并汇总，可一键导出 CSV。</div>
+  <input type="file" id="fileInput" multiple accept=".txt,.json" style="display:none" onchange="handleFileSelect(event)">
+  <div class="tz" id="uploadZone" onclick="document.getElementById('fileInput').click()"><div style="font-size:42px">📂</div><div style="font-weight:700;margin-top:6px">点击选择 或 拖拽文件到此处</div><div class="target-tag" style="margin-top:4px">支持批量导入 TXT / JSON</div></div>
+  <div id="uploadStatus" style="margin-top:10px;font-size:13px;color:#666"></div></div>
+  <div id="statsContent"></div>`;
+  overlay.appendChild(panel);document.body.appendChild(overlay);
+  const uz=panel.querySelector('#uploadZone');
+  uz.addEventListener('dragover',function(e){e.preventDefault();uz.style.background='#e8eef8';});
+  uz.addEventListener('dragleave',function(){uz.style.background='#f8faff';});
+  uz.addEventListener('drop',function(e){e.preventDefault();uz.style.background='#f8faff';handleFileSelect({target:{files:e.dataTransfer.files}});});
+  if(teacherData.length>0)displayStats();
+}
+function closeTeacherPanel(){const p=document.getElementById('teacherPanel');if(p)p.remove();}
+
+function handleFileSelect(event){
+  const files=event.target.files;if(!files||!files.length)return;
+  const sd=document.getElementById('uploadStatus');sd.innerHTML='<span style="color:var(--blue)">正在处理…</span>';
+  let loaded=0,err=0,total=files.length;
+  Array.from(files).forEach(function(file){
+    const reader=new FileReader();
+    reader.onload=function(e){
+      try{
+        const content=e.target.result;let data=null;
+        if(file.name.endsWith('.txt')){
+          const m=content.match(/--- SYSTEM DATA BEGIN ---\s*([\s\S]*?)\s*--- SYSTEM DATA END ---/);
+          if(m&&m[1])data=JSON.parse(m[1].trim());else{err++;chk();return;}
+        }else if(file.name.endsWith('.json'))data=JSON.parse(content);
+        else{err++;chk();return;}
+        if(data&&data.studentId&&data.studentName&&data.totalScore!==undefined){teacherData.push(data);loaded++;}else err++;
+      }catch(ex){err++;}
+      chk();
+    };
+    reader.readAsText(file);
+    function chk(){if(loaded+err===total){
+      sd.innerHTML='<span style="color:var(--ok)">✓ 成功导入 '+loaded+' 个</span>'+(err>0?'<span style="color:var(--err);margin-left:10px">✗ '+err+' 个失败</span>':'');
+      if(loaded>0)displayStats();
+    }}
+  });
+}
+
+function analyzeTeacherData(data){
+  const map={};
+  data.forEach(function(log){
+    const id=log.studentId;
+    if(!map[id])map[id]={studentId:id,studentName:log.studentName,subs:[],count:0,sum:0,max:0,min:100};
+    const s=map[id];s.subs.push(log);s.count++;s.sum+=log.totalScore;
+    s.max=Math.max(s.max,log.totalScore);s.min=Math.min(s.min,log.totalScore);
+    s.last=log; // 取最后导入的一次明细
+  });
+  const students=Object.values(map);
+  students.forEach(function(s){s.avg=s.sum/s.count;});
+  const avg=students.length?students.reduce(function(a,s){return a+s.avg;},0)/students.length:0;
+  return {totalStudents:students.length,totalSubmissions:data.length,avgScore:avg,students:students.sort(function(a,b){return a.studentId.localeCompare(b.studentId);})};
+}
+
+function displayStats(){
+  const st=analyzeTeacherData(teacherData);
+  let listHtml='';
+  st.students.forEach(function(s){
+    const g=gradeText(s.avg);
+    const gc=s.avg>=80?'var(--ok)':s.avg>=60?'var(--warn)':'var(--err)';
+    const sc=s.last.scores||{};
+    listHtml+='<div class="student-item"><div class="header"><div class="name">'+s.studentName+' ('+s.studentId+')</div><div style="color:'+gc+';font-weight:700">'+s.avg.toFixed(1)+'分 · '+g+'</div></div>'
+      +'<div class="target-tag">提交 '+s.count+' 次 ｜ 最高 '+s.max+' ｜ 最低 '+s.min+' ｜ 指导教师：'+(s.last.advisor||'—')+'</div>'
+      +'<div class="target-tag" style="margin-top:4px">封面信息 '+(sc.coverInfo!=null?sc.coverInfo:'-')+'/10 ｜ 封面时间 '+(sc.coverDate!=null?sc.coverDate:'-')+'/10 ｜ 设计参数 '+(sc.params!=null?sc.params:'-')+'/50 ｜ 起止日期 '+(sc.startDate!=null?sc.startDate:'-')+'/10 ｜ 参考文献 '+(sc.references!=null?sc.references:'-')+'/20（'+(s.last.refCount!=null?s.last.refCount:'-')+'篇，英文'+(s.last.refEnCount!=null?s.last.refEnCount:'-')+'篇）</div></div>';
+  });
+  document.getElementById('statsContent').innerHTML=
+    '<div class="stats-card"><h3 style="font-size:18px;margin-bottom:6px">总体统计</h3><div class="stats-grid">'
+    +'<div class="stats-item"><div class="label">学生总数</div><div class="value">'+st.totalStudents+'</div></div>'
+    +'<div class="stats-item"><div class="label">提交次数</div><div class="value">'+st.totalSubmissions+'</div></div>'
+    +'<div class="stats-item"><div class="label">平均分</div><div class="value">'+st.avgScore.toFixed(1)+'</div></div></div></div>'
+    +'<div class="card"><div class="card-title"><span class="icon">👥</span>学生列表<span style="margin-left:auto;display:flex;gap:10px"><button class="btn btn-success" onclick="exportCSV()">📊 导出 CSV</button><button class="btn btn-danger" onclick="clearTeacherData()">🗑️ 清空</button></span></div>'
+    +'<div class="student-list">'+(listHtml||'<div style="text-align:center;padding:40px;color:#888">暂无数据</div>')+'</div></div>';
+}
+function clearTeacherData(){if(confirm('确定清空所有已导入数据？')){teacherData=[];displayStats();document.getElementById('uploadStatus').innerHTML='';}}
+
+function exportCSV(){
+  if(!teacherData.length){alert('请先导入数据！');return;}
+  const st=analyzeTeacherData(teacherData);
+  let csv='\uFEFF学号,姓名,提交次数,平均分,最高分,最低分,封面信息(10),封面时间(10),设计参数(50),起止日期(10),参考文献(20),文献篇数,英文文献篇数,指导教师,等级\n';
+  st.students.forEach(function(s){
+    const sc=s.last.scores||{};
+    csv+=[s.studentId,s.studentName,s.count,s.avg.toFixed(1),s.max,s.min,
+      sc.coverInfo!=null?sc.coverInfo:'',sc.coverDate!=null?sc.coverDate:'',sc.params!=null?sc.params:'',
+      sc.startDate!=null?sc.startDate:'',sc.references!=null?sc.references:'',s.last.refCount!=null?s.last.refCount:'',
+      s.last.refEnCount!=null?s.last.refEnCount:'',
+      s.last.advisor||'',gradeText(s.avg)].join(',')+'\n';
+  });
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='离合器任务书评阅汇总_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+document.addEventListener('keydown', e => {
+if (e.key === 'F12' || 
+(e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
+(e.ctrlKey && e.key === 'U') ||
+(e.ctrlKey && e.key === 'S')) {
+e.preventDefault();
+return false;
+}
+});
+</script>
+<script>
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('keydown', e => {
+    if (e.key === 'F12' || 
+        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
+        (e.ctrlKey && e.key === 'U') ||
+        (e.ctrlKey && e.key === 'S')) {
+      e.preventDefault();
+      return false;
+    }
+  });
+</script>
+</body>
+</html>
