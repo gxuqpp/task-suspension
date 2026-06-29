@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>课程设计任务书智能评阅系统（离合器）</title>
+<title>课程设计任务书智能评阅系统（悬架（钢板弹簧））</title>
 <style>
   :root{
     --blue:#1a4a8a; --blue-light:#2d6ec0; --bg:#f0f4fb; --card:#fff;
@@ -59,14 +59,9 @@
   .crit-item .lbl{font-size:13px;font-weight:700;color:#333;margin-top:2px;}
   .crit-item .desc{font-size:11px;color:#777;margin-top:5px;line-height:1.5;}
 
-  /* input toggle */
-  .seg{display:inline-flex;background:#e8eef8;border-radius:8px;padding:4px;margin-bottom:12px;}
-  .seg button{border:none;background:transparent;padding:8px 18px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700;color:#555;}
-  .seg button.active{background:var(--blue-light);color:#fff;}
+  /* upload */
   .upload-zone{border:2px dashed #a0c8f0;border-radius:8px;padding:34px 20px;text-align:center;background:#f8faff;cursor:pointer;transition:.3s;}
   .upload-zone:hover{border-color:#1a5fa8;background:#eef5ff;}
-  textarea.paste{width:100%;min-height:220px;border:2px solid #ddd;border-radius:8px;padding:12px;font-size:13px;font-family:"微软雅黑",monospace;line-height:1.6;resize:vertical;}
-  textarea.paste:focus{outline:none;border-color:var(--blue-light);}
 
   /* score banner */
   .score-banner{background:linear-gradient(135deg,#1a3a5c,#1a5fa8);color:#fff;border-radius:10px;padding:24px;margin-bottom:16px;}
@@ -86,6 +81,9 @@
   .b-ok{background:#d4f0db;color:#1a7c3a;} .b-warn{background:#fff3cd;color:#856404;} .b-err{background:#fde8e7;color:#c0392b;} .b-skip{background:#eee;color:#888;}
   .evi{font-family:monospace;font-size:12px;color:#1a2a6a;background:#f0f4ff;padding:1px 6px;border-radius:4px;word-break:break-all;}
   .target-tag{font-size:12px;color:#888;}
+
+  /* param group header */
+  .group-header{background:#e8eef8;padding:6px 10px;font-weight:700;color:var(--blue);font-size:13px;border-left:3px solid var(--blue-light);}
 
   /* teacher panel */
   .tpanel{background:#fff;padding:28px;border-radius:12px;max-width:1000px;width:95%;max-height:92vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,.3);}
@@ -110,7 +108,7 @@
 user-select: none
 </style>
 
-<!-- PDF.js（联网时自动加载，用于提取 PDF 文字） -->
+<!-- PDF.js -->
 <script>
 (function(){var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';s.onerror=function(){window.__pdfFailed=true;};document.head.appendChild(s);})();
 </script>
@@ -121,7 +119,7 @@ user-select: none
 <div class="login-overlay" id="loginOverlay">
   <div class="login-box">
     <h2>🎓 身份验证</h2>
-    <div class="desc">欢迎使用「课程设计任务书智能评阅系统（离合器）」。<br>请输入学号与姓名后上传任务书，系统将按评分标准自动评阅并生成报告。</div>
+    <div class="desc">欢迎使用「课程设计任务书智能评阅系统（悬架（钢板弹簧））」。<br>请输入学号与姓名后上传任务书，系统将按评分标准自动评阅并生成报告。</div>
     <div class="login-field">
       <label>学号</label>
       <input type="text" id="studentId" placeholder="请输入学号（如 2024012345）" maxlength="20">
@@ -158,7 +156,7 @@ user-select: none
 <div class="app-header">
   <div class="header-row">
     <div>
-      <h1>📋 课程设计任务书智能评阅系统（离合器）</h1>
+      <h1>📋 课程设计任务书智能评阅系统（悬架（钢板弹簧））</h1>
       <div class="sub">广西大学 · 车辆工程专业 · 《汽车设计》课程教学团队</div>
     </div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -181,16 +179,15 @@ user-select: none
     <div class="crit-grid">
       <div class="crit-item"><div class="pct">10</div><div class="lbl">封面信息</div><div class="desc">学号、姓名、指导教师（覃频频/杨蓉/黄俊明/项载毓）是否正确</div></div>
       <div class="crit-item"><div class="pct">10</div><div class="lbl">封面时间</div><div class="desc">封面落款时间是否为 2026 年 7 月 6 日</div></div>
-      <div class="crit-item"><div class="pct">50</div><div class="lbl">设计参数/数据</div><div class="desc">基本数据是否齐全、能否支撑后续离合器设计计算（发动机转矩、转速、传动比、质量等）</div></div>
+      <div class="crit-item"><div class="pct">50</div><div class="lbl">设计参数/数据</div><div class="desc">基本数据是否齐全、能否支撑后续悬架（钢板弹簧）设计计算（整车质量、轴荷分配、偏频、簧下质量、弹簧几何参数等）</div></div>
       <div class="crit-item"><div class="pct">10</div><div class="lbl">设计工作起止日期</div><div class="desc">起止时间是否为「自 2026 年 7 月 6 日起，至 2026 年 7 月 17 日止」</div></div>
       <div class="crit-item"><div class="pct">20</div><div class="lbl">主要参考文献</div><div class="desc">「主要参考文献与书籍」≥ 20 篇，且含 ≥ 2 篇英文文献为满分</div></div>
     </div>
   </div>
 
-  <!-- 上传/粘贴 -->
+  <!-- 上传 PDF -->
   <div class="card">
     <div class="card-title"><span class="icon">📂</span>提交任务书</div>
-
     <div id="pdfInput">
       <input type="file" id="revFile" accept=".pdf" style="display:none" onchange="onRevFileSelected(event)">
       <div class="upload-zone" id="revUploadZone" onclick="document.getElementById('revFile').click()">
@@ -200,7 +197,6 @@ user-select: none
       </div>
       <div style="margin-top:10px;font-size:13px;color:#555">已选文件：<b id="revFileName">未选择</b></div>
     </div>
-
     <div class="btn-bar">
       <button class="btn btn-primary" onclick="gradeTaskBook()">🔍 开始评阅</button>
     </div>
@@ -219,13 +215,13 @@ user-select: none
 /* ============================================================
    配置项
    ============================================================ */
-const TEACHER_PASSWORD = 'gxuqpp123';          // 教师密码（如需修改请改这里）
-const ADVISORS = ['覃频频','杨蓉','黄俊明','项载毓'];  // 合法指导教师名单
-const TARGET = {y:2026, mo:7, d:6};            // 封面日期 & 设计工作起始日期：2026年7月6日
-const TARGET_END = {y:2026, mo:7, d:17};       // 设计工作截止日期：2026年7月17日
-const REF_FULL = 20;                            // 参考文献满分所需篇数
-const REF_MIN_EN = 2;                           // 参考文献满分所需的最少英文文献篇数
-const REF_CAP_NO_EN = 16;                       // 英文文献不足时本项最高得分（满分20，扣4分）
+const TEACHER_PASSWORD = 'gxuqpp123';
+const ADVISORS = ['覃频频','杨蓉','黄俊明','项载毓'];
+const TARGET = {y:2026, mo:7, d:6};
+const TARGET_END = {y:2026, mo:7, d:17};
+const REF_FULL = 20;
+const REF_MIN_EN = 2;
+const REF_CAP_NO_EN = 16;
 
 let teacherData = [];
 let state = { studentId:'', studentName:'', isTeacher:false };
@@ -270,7 +266,7 @@ function onRevFileSelected(e){
 }
 
 /* ============================================================
-   中文数字 → 阿拉伯数字（仅用于日期识别）
+   中文数字 → 阿拉伯数字
    ============================================================ */
 function cnToArabic(str){
   const single={'〇':'0','零':'0','○':'0','Ｏ':'0','ｏ':'0','０':'0','O':'0','o':'0','О':'0','о':'0','Ο':'0','ο':'0',
@@ -280,7 +276,6 @@ function cnToArabic(str){
     '九':'9','玖':'9','９':'9'};
   let out='';
   for(let i=0;i<str.length;i++){out+=(single[str[i]]!==undefined)?single[str[i]]:str[i];}
-  // 处理「十」：十六→16，二十→20，二十六→26，十→10
   out=out.replace(/([0-9]?)十([0-9]?)/g,function(_,a,b){
     const t=a===''?1:parseInt(a,10);
     const o=b===''?0:parseInt(b,10);
@@ -292,10 +287,6 @@ function cnToArabic(str){
 /* ============================================================
    日期识别
    ============================================================ */
-// 日期专用归一化：中文数字→阿拉伯，并去掉所有空白。
-// 解决两类常见的 PDF 提取问题：
-//   1) 落款用中文数字且字间带空格，如「二 O 二六年七月六日」→「2026年7月6日」
-//   2) 数字与「年/月/日」因字体基线不同被 pdf.js 拆到不同行（含换行）
 function normForDate(seg){return cnToArabic(seg).replace(/\s+/g,'');}
 function isTargetDate(seg){
   const n=normForDate(seg);
@@ -309,17 +300,14 @@ function findAnyTargetYearDate(seg){
   if(m)return {y:TARGET.y,mo:+m[1],d:+m[2]};
   m=n.match(new RegExp(TARGET.y+'[\\.\\-\\/](\\d{1,2})[\\.\\-\\/](\\d{1,2})'));
   if(m)return {y:TARGET.y,mo:+m[1],d:+m[2]};
-  // 任意日期（年份不对）
   m=n.match(/(\d{4})年(\d{1,2})月(\d{1,2})/)||n.match(/(\d{4})[\.\-\/](\d{1,2})[\.\-\/](\d{1,2})/);
   if(m)return {y:+m[1],mo:+m[2],d:+m[3]};
   return null;
 }
 function fmtDate(d){return d?(d.y+'年'+d.mo+'月'+d.d+'日'):'未识别到日期';}
-// 提取片段内所有日期（按出现顺序），支持中文数字/阿拉伯、含内部空格/换行
 function findAllDates(seg){
   const n=normForDate(seg);
-  const out=[];
-  let m;
+  const out=[];let m;
   const re1=/(\d{4})年0*(\d{1,2})月0*(\d{1,2})日?/g;
   while((m=re1.exec(n))!==null){out.push({y:+m[1],mo:+m[2],d:+m[3],pos:m.index});}
   const re2=/(\d{4})[\.\-\/]0*(\d{1,2})[\.\-\/]0*(\d{1,2})/g;
@@ -333,9 +321,6 @@ function sameDate(a,b){return !!(a&&b&&a.y===b.y&&a.mo===b.mo&&a.d===b.d);}
    分区定位
    ============================================================ */
 function getCoverRegion(text){
-  // 封面落款日期通常位于封面底部（指导教师/落款一带），排在「设计题目/设计的参数」等
-  // 标记的下方。若用这些标记作下界会把落款日期切掉，故改用“进入正文/正式章节”的标记；
-  // 再把“指导教师/日期/教研室”等落款锚点附近文字并入，确保落款日期一定被纳入。
   const bodyMarkers=['摘要','目录','正文','设计说明书','设计计算说明书','第一章','第1章','第 1 章','引言','绪论','Abstract'];
   let cut=text.length;
   bodyMarkers.forEach(function(mk){const i=text.indexOf(mk);if(i>0&&i<cut)cut=i;});
@@ -373,30 +358,52 @@ function getRefSection(text){
 }
 
 /* ============================================================
-   设计参数清单（离合器设计所需基本数据，合计 50 分）
-   依据《汽车膜片弹簧离合器设计计算工具》整车基本参数输入项：
-   发动机最大转矩 Temax、对应转速 nT、最高转速 nemax、整车/总质量 ma、
-   一挡传动比 i₁、主减速器传动比 i₀、车轮滚动半径 r、最高车速 umax、起步转速 ne 等。
+   设计参数清单（悬架（钢板弹簧）设计所需基本数据，合计 50 分）
+   依据《钢板弹簧综合设计计算工具》整车基本参数、主副簧刚度分配、
+   弹簧几何参数等模块的核心输入项。
+   分为 5 组：
+     ① 整车基本参数 (20分)
+     ② 轴荷分配与簧下质量 (12分)
+     ③ 偏频与静挠度 (8分)
+     ④ 弹簧几何参数 (6分)
+     ⑤ 悬架（钢板弹簧）附加参数 (4分)
    ============================================================ */
 const DESIGN_PARAMS=[
-  {name:'发动机最大转矩 Temax', kws:['发动机最大转矩','最大转矩','最大扭矩','Temax'], pts:9, needNum:true},
-  {name:'最大转矩对应转速 nT', kws:['最大转矩对应转速','转矩对应转速','对应转速','转矩转速'], pts:4, needNum:true},
-  {name:'发动机最高转速 nemax', kws:['发动机最高转速','最高转速','额定转速','nemax'], pts:5, needNum:true},
-  {name:'发动机最大功率 / 额定功率', kws:['发动机最大功率','最大功率','额定功率','Pemax','Pmax'], pts:3, needNum:true},
-  {name:'整车 / 满载质量 ma', kws:['整车质量','最大总质量','满载质量','整备质量','车辆质量','总质量','装载质量','满载'], pts:6, needNum:true},
-  {name:'变速器一挡传动比 i₁', kws:['一挡传动比','一档传动比','变速器一挡','变速器一档','一挡速比','一档速比','一挡'], pts:5, needNum:true},
-  {name:'主减速器传动比 i₀', kws:['主减速器传动比','主减速比','主传动比','主减速器','主减'], pts:5, needNum:true},
-  {name:'车轮滚动半径 / 轮胎规格', kws:['车轮滚动半径','车轮半径','滚动半径','有效半径','轮胎规格','轮胎型号','车轮滚动','轮胎','轮辋'], pts:5, needNum:false},
-  {name:'最高车速 umax', kws:['最高车速','最大车速','最高速度','最大速度','最高时速'], pts:4, needNum:true},
-  {name:'发动机起步转速 ne', kws:['起步转速','离合器接合转速','接合转速','起步车速','换挡车速','起步'], pts:4, needNum:true}
+  // ① 整车基本参数
+  {name:'整车整备质量 m₀', kws:['整车整备质量','整备质量','空载质量','自重','空车质量','m0','m₀'], pts:5, needNum:true, group:'整车基本参数'},
+  {name:'装载质量 mL', kws:['装载质量','额定装载','额定载重','载重量','载货质量','额定载质量','mL'], pts:4, needNum:true, group:'整车基本参数'},
+  {name:'整车总质量 mt', kws:['整车总质量','最大总质量','总质量','满载总质量','mt','m_t'], pts:4, needNum:true, group:'整车基本参数'},
+  {name:'车型类别', kws:['乘用车','客车','货车','越野车','车型类别','车型'], pts:3, needNum:false, group:'整车基本参数'},
+  {name:'悬架（钢板弹簧）类型（前/后）', kws:['前悬架','后悬架','悬架类型','悬架位置','前悬','后悬'], pts:4, needNum:false, group:'整车基本参数'},
+
+  // ② 轴荷分配与簧下质量
+  {name:'前轴轴荷分配比 β₁（满载）', kws:['前轴轴荷','前轴分配','前轴载荷分配','β1','β₁','前轴荷'], pts:3, needNum:true, group:'轴荷分配与簧下质量'},
+  {name:'后轴轴荷分配比 β₂（满载）', kws:['后轴轴荷','后轴分配','后轴载荷分配','β2','β₂','后轴荷'], pts:3, needNum:true, group:'轴荷分配与簧下质量'},
+  {name:'前悬架（钢板弹簧）簧下质量 mu₁', kws:['前悬架簧下','前簧下质量','前轴簧下','mu1','mu₁','簧下质量'], pts:3, needNum:true, group:'轴荷分配与簧下质量'},
+  {name:'后悬架（钢板弹簧）簧下质量 mu₂', kws:['后悬架簧下','后簧下质量','后轴簧下','mu2','mu₂'], pts:3, needNum:true, group:'轴荷分配与簧下质量'},
+
+  // ③ 偏频与静挠度
+  {name:'前悬架（钢板弹簧）偏频 n₁', kws:['前悬架偏频','前偏频','n1','n₁','前悬偏频'], pts:3, needNum:true, group:'偏频与静挠度'},
+  {name:'后悬架（钢板弹簧）偏频 n₂', kws:['后悬架偏频','后偏频','n2','n₂','后悬偏频'], pts:3, needNum:true, group:'偏频与静挠度'},
+  {name:'悬架（钢板弹簧）静挠度 fc', kws:['静挠度','fc','f_c','悬架挠度','满载挠度'], pts:2, needNum:true, group:'偏频与静挠度'},
+
+  // ④ 弹簧几何参数
+  {name:'弹簧全长 L / 半长', kws:['弹簧全长','弹簧长度','弹簧半长','全长','半长','钢板弹簧长','有效长度','弹簧总长','弹簧长'], pts:2, needNum:true, group:'弹簧几何参数'},
+  {name:'弹簧片宽 b', kws:['弹簧片宽','片宽','钢板宽度','弹簧宽','簧片宽'], pts:2, needNum:true, group:'弹簧几何参数'},
+  {name:'弹簧片数 n / 片厚 h', kws:['弹簧片数','簧片数','片数','总片数','片厚','簧片厚','各片厚度','主片厚'], pts:2, needNum:true, group:'弹簧几何参数'},
+
+  // ⑤ 悬架（钢板弹簧）附加参数
+  {name:'满载弧高 fa', kws:['满载弧高','弧高','fa','f_a','自由弧高'], pts:2, needNum:true, group:'悬架（钢板弹簧）附加参数'},
+  {name:'是否有副簧', kws:['副簧','有副簧','无副簧','辅助弹簧','附加弹簧','主副簧','副弹簧'], pts:2, needNum:false, group:'悬架（钢板弹簧）附加参数'}
 ];
+
 function findParam(text,p){
   let bestNoNum=null;
   for(let i=0;i<p.kws.length;i++){
     const kw=p.kws[i];
     let idx=text.indexOf(kw);
     while(idx>=0){
-      const after=text.slice(idx,idx+42);
+      const after=text.slice(idx,idx+60);
       const num=after.match(/\d+(?:\.\d+)?/);
       const snip=after.replace(/\s+/g,' ').trim();
       if(num)return {found:true,hasNum:true,evidence:snip};
@@ -417,21 +424,18 @@ function countReferences(refText){
   const lineLead=(seg.match(/(^|\n)\s*\d{1,3}\s*[\.\、]/g)||[]).length;
   return Math.max(bracket,lineLead);
 }
-// 将文献区段按条目编号拆分为若干条（兼容 [n] 与 行首 n. / n、 两种体例）
 function splitRefEntries(refText){
   const seg=(refText||'').slice(0,9000);
   let a=seg.split(/[\[【〔（(]\s*\d{1,3}\s*[\]】〕）)]/).map(function(s){return s.trim();}).filter(Boolean);
   let b=seg.split(/(?:^|\n)\s*\d{1,3}\s*[\.\、]/).map(function(s){return s.trim();}).filter(Boolean);
   return a.length>=b.length?a:b;
 }
-// 判断单条文献是否为英文文献：几乎不含中文（≤2个汉字，容忍杂散），且含足量拉丁字母与英文单词
 function isEnglishRef(entry){
   const cjk=(entry.match(/[\u4e00-\u9fa5]/g)||[]).length;
   const latin=(entry.match(/[A-Za-z]/g)||[]).length;
   const words=(entry.match(/[A-Za-z]{2,}/g)||[]).length;
   return cjk<=2 && latin>=10 && words>=3;
 }
-// 统计英文文献篇数
 function countEnglishReferences(refText){
   if(!refText)return 0;
   return splitRefEntries(refText).filter(isEnglishRef).length;
@@ -475,7 +479,7 @@ function scoreTaskBook(raw){
     if(f.found&&(f.hasNum||!p.needNum)){sc=p.pts;status='ok';}
     else if(f.found&&p.needNum&&!f.hasNum){sc=Math.round(p.pts*0.5);status='warn';}
     else {sc=0;status='err';}
-    return {name:p.name,evidence:f.evidence,score:sc,max:p.pts,status:status,needNum:p.needNum,hasNum:f.hasNum,found:f.found};
+    return {name:p.name,evidence:f.evidence,score:sc,max:p.pts,status:status,needNum:p.needNum,hasNum:f.hasNum,found:f.found,group:p.group};
   });
   R.params={score:pDetails.reduce(function(s,x){return s+x.score;},0),max:50,scoped:ps.scoped,label:ps.label,details:pDetails};
 
@@ -507,7 +511,7 @@ function scoreTaskBook(raw){
   const enCount=countEnglishReferences(rs.text);
   const enOK=enCount>=REF_MIN_EN;
   let refScore=Math.min(REF_FULL,refCount);
-  if(!enOK)refScore=Math.min(refScore,REF_CAP_NO_EN);   // 英文文献不足：无法得满分
+  if(!enOK)refScore=Math.min(refScore,REF_CAP_NO_EN);
   const refFull=(refCount>=REF_FULL && enOK);
   R.refs={score:refScore,max:20,count:refCount,enCount:enCount,enOK:enOK,
     found:rs.found,label:rs.label,status:refFull?'ok':(refScore>0?'warn':'err')};
@@ -524,7 +528,7 @@ function scoreTaskBook(raw){
    ============================================================ */
 async function extractPdfText(arrayBuffer){
   const pdfjsLib=window['pdfjs-dist/build/pdf'];
-  if(!pdfjsLib)throw new Error('PDF 解析库未加载（可能处于离线状态）。请联网后刷新页面重试。');
+  if(!pdfjsLib)throw new Error('PDF 解析库未加载（可能处于离线状态）。请联网后刷新页面重试，或将 pdf.js 文件放在同目录下。');
   pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   const doc=await pdfjsLib.getDocument({data:arrayBuffer}).promise;
   let full='';
@@ -582,11 +586,29 @@ function renderGrade(r,text){
     return '<tr><td><b>'+s.name+'</b></td><td><span class="target-tag">应含：</span><span class="evi">'+s.target+'</span>'+(s.note?'<br><span class="target-tag">'+s.note+'</span>':'')+'</td><td>'+STBADGE[st]+'</td><td style="text-align:center"><span class="badge b-'+(s.score===s.max?'ok':'err')+'">'+s.score+'/'+s.max+'</span></td></tr>';
   }).join('');
 
-  // 设计参数明细
-  const paramRows=r.params.details.map(function(d){
-    const sc=d.score===d.max?'ok':d.score>0?'warn':'err';
-    return '<tr><td>'+d.name+'</td><td>'+(d.found?'<span class="evi">'+escapeHtml(d.evidence)+'</span>':'<span class="target-tag">未在参数部分找到</span>')+'</td><td>'+STBADGE[d.status]+'</td><td style="text-align:center"><span class="badge b-'+sc+'">'+d.score+'/'+d.max+'</span></td></tr>';
-  }).join('');
+  // 设计参数按分组输出
+  const groups={};
+  const groupOrder=['整车基本参数','轴荷分配与簧下质量','偏频与静挠度','弹簧几何参数','悬架（钢板弹簧）附加参数'];
+  const groupColors={'整车基本参数':'#1a5fa8','轴荷分配与簧下质量':'#0d7377','偏频与静挠度':'#8a6d1a','弹簧几何参数':'#6a1a8a','悬架（钢板弹簧）附加参数':'#1a7c3a'};
+  r.params.details.forEach(function(d){
+    if(!groups[d.group])groups[d.group]=[];
+    groups[d.group].push(d);
+  });
+
+  let paramRows='';
+  groupOrder.forEach(function(gname){
+    const items=groups[gname];
+    if(!items||!items.length)return;
+    const gHit=items.filter(function(d){return d.score===d.max;}).length;
+    const gTotal=items.reduce(function(s,d){return s+d.score;},0);
+    const gMax=items.reduce(function(s,d){return s+d.max;},0);
+    paramRows+='<tr><td colspan="4" class="group-header" style="border-left-color:'+(groupColors[gname]||'var(--blue-light)')+'">【'+gname+'】'+gHit+'/'+items.length+' 项通过，小计 '+gTotal+'/'+gMax+'</td></tr>';
+    items.forEach(function(d){
+      const sc=d.score===d.max?'ok':d.score>0?'warn':'err';
+      paramRows+='<tr><td>'+d.name+'</td><td>'+(d.found?'<span class="evi">'+escapeHtml(d.evidence)+'</span>':'<span class="target-tag">未在参数部分找到</span>')+'</td><td>'+STBADGE[d.status]+'</td><td style="text-align:center"><span class="badge b-'+sc+'">'+d.score+'/'+d.max+'</span></td></tr>';
+    });
+  });
+
   const missing=r.params.details.filter(function(d){return d.score<d.max;}).map(function(d){return d.name+(d.found&&!d.hasNum?'（已提及但缺少具体数值）':'（缺失）');});
 
   document.getElementById('gradeResult').innerHTML=`
@@ -618,9 +640,9 @@ function renderGrade(r,text){
 
   <div class="card">
     <div class="card-title"><span class="icon">📐</span>③ 设计参数 / 数据（${r.params.score}/50）</div>
-    <div class="info-box" style="margin-top:0">检查「设计的参数或数据」部分是否给出支撑后续离合器设计计算的基本数据（发动机转矩与转速、传动比、整车质量、车轮半径等）。${r.params.scoped?('已定位到参数区段（依据“'+r.params.label+'”）。'):'<b style="color:#c0392b">未定位到独立参数区段，已在全文范围内检索（结果可能偏宽松，请人工复核）。</b>'}</div>
+    <div class="info-box" style="margin-top:0">检查「设计的参数或数据」部分是否给出支撑后续悬架（钢板弹簧）设计计算的基本数据（整车质量、轴荷分配、偏频、簧下质量、弹簧几何参数等）。${r.params.scoped?('已定位到参数区段（依据"'+r.params.label+'"）。'):'<b style="color:#c0392b">未定位到独立参数区段，已在全文范围内检索（结果可能偏宽松，请人工复核）。</b>'}</div>
     <table class="rtab"><thead><tr><th>必备数据项</th><th>识别到的内容</th><th>结果</th><th>得分</th></tr></thead><tbody>${paramRows}</tbody></table>
-    ${missing.length?('<div style="margin-top:10px;font-weight:700;color:#a02a1f">⚠ 缺失/不足的数据项：</div><ul class="miss-list">'+missing.map(function(m){return '<li>'+m+'</li>';}).join('')+'</ul>'):'<div style="margin-top:10px;color:#1a7c3a;font-weight:700">✓ 基本数据齐全，可支撑后续离合器设计计算。</div>'}
+    ${missing.length?('<div style="margin-top:10px;font-weight:700;color:#a02a1f">⚠ 缺失/不足的数据项：</div><ul class="miss-list">'+missing.map(function(m){return '<li>'+m+'</li>';}).join('')+'</ul>'):'<div style="margin-top:10px;color:#1a7c3a;font-weight:700">✓ 基本数据齐全，可支撑后续悬架（钢板弹簧）设计计算。</div>'}
   </div>
 
   <div class="card">
@@ -630,7 +652,7 @@ function renderGrade(r,text){
       <tr><td>起始日期</td><td><span class="evi">${r.startDate.targetStart}</span></td><td><span class="evi">${r.startDate.foundStart}</span></td><td>${r.startDate.hasStart?STBADGE.ok:(r.startDate.labelFound?STBADGE.err:STBADGE.miss)}</td></tr>
       <tr><td>截止日期</td><td><span class="evi">${r.startDate.targetEnd}</span></td><td><span class="evi">${r.startDate.foundEnd}</span></td><td>${r.startDate.hasEnd?STBADGE.ok:(r.startDate.labelFound?STBADGE.err:STBADGE.miss)}</td></tr>
     </tbody></table>
-    <div class="target-tag" style="margin-top:8px">计分规则：起止日期均正确得满分（10）；仅一项正确得 5 分；${r.startDate.labelFound?('已定位到“'+escapeHtml(r.startDate.label)+'”字段。'):'<b style="color:#c0392b">未定位到“设计工作起止日期”字段，请确认任务书是否包含该部分。</b>'}<b style="color:#1a5fa8;margin-left:6px">本项合计 ${r.startDate.score}/10</b></div>
+    <div class="target-tag" style="margin-top:8px">计分规则：起止日期均正确得满分（10）；仅一项正确得 5 分；${r.startDate.labelFound?('已定位到"'+escapeHtml(r.startDate.label)+'"字段。'):'<b style="color:#c0392b">未定位到"设计工作起止日期"字段，请确认任务书是否包含该部分。</b>'}<b style="color:#1a5fa8;margin-left:6px">本项合计 ${r.startDate.score}/10</b></div>
   </div>
 
   <div class="card">
@@ -640,7 +662,7 @@ function renderGrade(r,text){
       <tr><td>参考文献篇数</td><td><span class="evi">≥ ${REF_FULL} 篇</span></td><td><b style="font-size:16px;color:#1a5fa8">${r.refs.count}</b> 篇</td><td>${r.refs.found?(r.refs.count>=REF_FULL?STBADGE.ok:STBADGE.warn):'<span class="badge b-skip">— 未找到文献区段</span>'}</td></tr>
       <tr><td>其中英文文献</td><td><span class="evi">≥ ${REF_MIN_EN} 篇</span></td><td><b style="font-size:16px;color:${r.refs.enOK?'#1a7c3a':'#c0392b'}">${r.refs.enCount}</b> 篇</td><td>${r.refs.found?(r.refs.enOK?STBADGE.ok:STBADGE.err):'<span class="badge b-skip">—</span>'}</td></tr>
     </tbody></table>
-    <div class="target-tag" style="margin-top:8px">计分规则：篇数每篇计 1 分、满 ${REF_FULL} 篇封顶；<b style="color:#c0392b">满分还须含 ≥ ${REF_MIN_EN} 篇英文文献</b>，英文不足时本项最高 ${REF_CAP_NO_EN} 分。${r.refs.found?('文献区段依据“'+r.refs.label+'”定位。'):'未检测到“参考文献”相关标题，请确认任务书是否包含该部分。'}<b style="color:#1a5fa8;margin-left:6px">本项合计 ${r.refs.score}/20</b></div>
+    <div class="target-tag" style="margin-top:8px">计分规则：篇数每篇计 1 分、满 ${REF_FULL} 篇封顶；<b style="color:#c0392b">满分还须含 ≥ ${REF_MIN_EN} 篇英文文献</b>，英文不足时本项最高 ${REF_CAP_NO_EN} 分。${r.refs.found?('文献区段依据"'+r.refs.label+'"定位。'):'未检测到"参考文献"相关标题，请确认任务书是否包含该部分。'}<b style="color:#1a5fa8;margin-left:6px">本项合计 ${r.refs.score}/20</b></div>
   </div>`;
   document.getElementById('downloadArea').style.display='block';
 }
@@ -654,7 +676,7 @@ function generateReportFile(){
   const r=_lastGrade;if(!r){alert('请先完成评阅！');return;}
   const grade=gradeText(r.total);
   const today=new Date().toISOString().slice(0,10);
-  let rep='===============================================\n   课程设计任务书 评阅报告（离合器）\n   广西大学 · 车辆工程专业 ·《汽车设计》课程\n===============================================\n\n';
+  let rep='===============================================\n   课程设计任务书 评阅报告（悬架（钢板弹簧））\n   广西大学 · 车辆工程专业 ·《汽车设计》课程\n===============================================\n\n';
   rep+='学号：'+state.studentId+'\n姓名：'+state.studentName+'\n提交时间：'+new Date().toLocaleString('zh-CN')+'\n\n';
   rep+='总分：'+r.total+' / 100  （'+grade+'）\n';
   rep+='① 封面信息：'+r.cover.score+' / 10\n';
@@ -665,14 +687,24 @@ function generateReportFile(){
 
   rep+='【封面信息明细】\n';
   r.cover.sub.forEach(function(s){rep+='  '+s.name+'：'+(s.found?'符合':'不符合')+'  得分 '+s.score+'/'+s.max+(s.note?'  ['+s.note+']':'')+'\n';});
+
   rep+='\n【设计参数明细】'+(r.params.scoped?'':'（注：未定位到独立参数区段，全文检索）')+'\n';
-  r.params.details.forEach(function(d){rep+='  '+d.name+'：'+(d.status==='ok'?'齐全':d.status==='warn'?'缺数值':'缺失')+'  得分 '+d.score+'/'+d.max+'\n';});
+  const groupOrder=['整车基本参数','轴荷分配与簧下质量','偏频与静挠度','弹簧几何参数','悬架（钢板弹簧）附加参数'];
+  groupOrder.forEach(function(gname){
+    const items=r.params.details.filter(function(d){return d.group===gname;});
+    if(!items.length)return;
+    rep+='  ——'+gname+'——\n';
+    items.forEach(function(d){
+      rep+='  '+d.name+'：'+(d.status==='ok'?'齐全':d.status==='warn'?'缺数值':'缺失')+'  得分 '+d.score+'/'+d.max+'\n';
+    });
+  });
+
   rep+='\n【指导教师识别】'+(r.advisor||'未识别')+'\n';
 
   rep+='\n--- SYSTEM DATA BEGIN ---\n';
   const jsonData={
     studentId:state.studentId, studentName:state.studentName,
-    timestamp:new Date().toISOString(), reportType:'taskbook_review',
+    timestamp:new Date().toISOString(), reportType:'taskbook_review_suspension',
     totalScore:r.total, grade:grade,
     scores:{coverInfo:r.cover.score, coverDate:r.coverDate.score, params:r.params.score, startDate:r.startDate.score, references:r.refs.score},
     advisor:r.advisor, refCount:r.refCount, refEnCount:r.refEnCount
@@ -681,7 +713,7 @@ function generateReportFile(){
 
   const blob=new Blob([rep],{type:'text/plain;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download=state.studentId+'_'+state.studentName+'_离合器任务书评阅报告_'+today+'.txt';
+  a.download=state.studentId+'_'+state.studentName+'_悬架（钢板弹簧）任务书评阅报告_'+today+'.txt';
   a.click();
   alert('任务书评阅报告已生成！请将此 TXT 文件提交给教师。');
 }
@@ -742,7 +774,7 @@ function analyzeTeacherData(data){
     if(!map[id])map[id]={studentId:id,studentName:log.studentName,subs:[],count:0,sum:0,max:0,min:100};
     const s=map[id];s.subs.push(log);s.count++;s.sum+=log.totalScore;
     s.max=Math.max(s.max,log.totalScore);s.min=Math.min(s.min,log.totalScore);
-    s.last=log; // 取最后导入的一次明细
+    s.last=log;
   });
   const students=Object.values(map);
   students.forEach(function(s){s.avg=s.sum/s.count;});
@@ -785,9 +817,10 @@ function exportCSV(){
   });
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download='离合器任务书评阅汇总_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.download='悬架（钢板弹簧）任务书评阅汇总_'+new Date().toISOString().slice(0,10)+'.csv';
   a.click();
 }
+document.addEventListener('contextmenu', e => e.preventDefault());
 document.addEventListener('keydown', e => {
 if (e.key === 'F12' || 
 (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
